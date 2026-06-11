@@ -1,4 +1,4 @@
-# Pipeline A — Prompt to Video
+# FrameGen
 
 Text prompt → narrated MP4 video via Claude (script + layout + article), ElevenLabs (TTS), and Remotion (render).
 
