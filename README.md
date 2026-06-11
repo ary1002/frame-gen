@@ -20,10 +20,13 @@ pip install -e ".[dev]"
 # 3. Node deps
 cd remotion && npm install && cd ..
 
-# 4. Start services (Postgres, Redis, MinIO)
+# 4. Frontend deps
+cd frontend && npm install && cd ..
+
+# 5. Start services (Postgres, Redis, MinIO)
 docker compose up -d
 
-# 5. Run DB migrations
+# 6. Run DB migrations
 alembic upgrade head
 ```
 
@@ -35,7 +38,12 @@ uvicorn app.main:app --reload
 
 # Terminal 2 — Worker
 celery -A app.celery_app worker --loglevel=info
+
+# Terminal 3 — Frontend
+cd frontend && npm run dev
 ```
+
+Open http://localhost:5173 to use the UI.
 
 ## Submit a job
 
