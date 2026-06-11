@@ -32,6 +32,8 @@ export interface SlideEntry {
   duration_frames: number;
   audio_url: string;
   layout: SlideLayout;
+  word_timestamps: WordTimestamp[];
+  cues: number[];
 }
 
 export interface CaptionConfig {

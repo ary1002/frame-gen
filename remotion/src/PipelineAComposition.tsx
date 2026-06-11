@@ -1,6 +1,6 @@
 import React from "react";
 import { Audio, AbsoluteFill, Sequence } from "remotion";
-import { TransitionSeries, linearTiming } from "@remotion/transitions";
+import { TransitionSeries, springTiming } from "@remotion/transitions";
 import { RemotionSchema } from "./types";
 import { SlideWithEffect } from "./SlideWithEffect";
 import { CaptionsLayer } from "./CaptionsLayer";
@@ -18,7 +18,10 @@ export const PipelineAComposition: React.FC<Props> = ({ schema }) => {
       <TransitionSeries>
         {schema.slides.map((slide, i) => (
           <React.Fragment key={slide.slide_index}>
-            <TransitionSeries.Sequence durationInFrames={slide.duration_frames}>
+            <TransitionSeries.Sequence
+              durationInFrames={slide.duration_frames}
+              premountFor={slide.layout.transition_out.duration_frames}
+            >
               <AbsoluteFill>
                 <SlideWithEffect data={slide} />
                 {slide.audio_url && (
@@ -31,7 +34,10 @@ export const PipelineAComposition: React.FC<Props> = ({ schema }) => {
             {i < schema.slides.length - 1 && (
               <TransitionSeries.Transition
                 presentation={resolveTransition(slide.layout.transition_out)}
-                timing={linearTiming({ durationInFrames: slide.layout.transition_out.duration_frames })}
+                timing={springTiming({
+                  config: { damping: 200 },
+                  durationInFrames: slide.layout.transition_out.duration_frames,
+                })}
               />
             )}
           </React.Fragment>
