@@ -106,12 +106,55 @@ async def _run_tts_async(job_id: str, slide_index: int):
 
 @celery_app.task(bind=True, name="run_layout_gen")
 def run_layout_gen(self, job_id: str, slide_index: int):
-    pass  # Stage 2A — implemented later
+    """Stage 2A: generate visual layout for one slide."""
+    asyncio.run(_run_layout_gen_async(job_id, slide_index))
+
+
+async def _run_layout_gen_async(job_id: str, slide_index: int):
+    import uuid
+
+    from app.db import AsyncSessionLocal
+    from app.llm.layout_gen import generate_layout
+    from app.models import Slide
+    from app.pipeline.barrier import check_barrier
+    from app import storage
+
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(
+            sqlalchemy.select(Slide).where(
+                Slide.job_id == uuid.UUID(job_id),
+                Slide.slide_index == slide_index,
+            )
+        )
+        slide = result.scalar_one_or_none()
+        if slide is None:
+            raise ValueError(f"Slide {slide_index} not found for job {job_id}")
+
+        layout = await generate_layout(job_id, slide_index, slide.text, db)
+
+        layout_dict = layout.model_dump(by_alias=True)
+        slide.layout_json = layout_dict
+        await db.commit()
+
+        storage.put_json(f"{job_id}/layout/{slide_index}.json", layout_dict)
+
+        await check_barrier(job_id, db)
 
 
 @celery_app.task(bind=True, name="run_timeline")
 def run_timeline(self, job_id: str):
-    pass  # Stage 4 — implemented later
+    """Stage 4: assemble RemotionSchema and fan out render + article."""
+    asyncio.run(_run_timeline_async(job_id))
+
+
+async def _run_timeline_async(job_id: str):
+    from app.db import AsyncSessionLocal
+    from app.pipeline.timeline import build_and_store_schema
+
+    async with AsyncSessionLocal() as db:
+        await build_and_store_schema(job_id, db)
+
+    group(run_render.s(job_id), run_article_gen.s(job_id)).delay()
 
 
 @celery_app.task(bind=True, name="run_render")
