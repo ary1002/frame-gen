@@ -29,6 +29,17 @@ async function main() {
     serveUrl: bundleLocation,
     id: "PipelineAComposition",
     inputProps: { schema },
+    // Remotion may download a headless Chromium binary when rendering on
+    // machines without it. Provide a callback so we can surface download
+    // progress as JSON lines (the Python pipeline expects JSON progress).
+    onBrowserDownload: (info) => {
+      try {
+        process.stdout.write(JSON.stringify({ browser_download: info }) + "\n");
+      } catch (e) {
+        // Fallback: stringify unknown values
+        process.stdout.write(JSON.stringify({ browser_download: String(info) }) + "\n");
+      }
+    },
   });
 
   process.stdout.write(JSON.stringify({ status: "rendering", total_frames: composition.durationInFrames }) + "\n");

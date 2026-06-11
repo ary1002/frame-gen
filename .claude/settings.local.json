@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//home/aryan/Desktop/remotion-phases-2a-4/**)",
+      "Bash(pip install *)",
+      "Bash(python -m pytest tests/test_timeline.py -v)",
+      "Bash(pip3 install *)",
+      "Bash(python3 -m pytest tests/test_timeline.py -v)",
+      "Read(//home/aryan/Desktop/remotion-phase-6/**)",
+      "Bash(python3 -m pytest tests/test_article_gen.py tests/test_render_path.py -v)",
+      "Bash(python3 -m pytest tests/test_article_gen.py tests/test_render_path.py -v --asyncio-mode=auto)"
+    ]
+  }
+}
