@@ -47,7 +47,7 @@ async def _run_script_gen_async(job_id: str):
         group(tts_tasks + layout_tasks).delay()
 
 
-@celery_app.task(bind=True, name="run_tts")
+@celery_app.task(bind=True, name="run_tts", rate_limit="2/s")
 def run_tts(self, job_id: str, slide_index: int):
     """Stage 2B: synthesize audio for one slide."""
     asyncio.run(_run_tts_async(job_id, slide_index))

@@ -27,7 +27,7 @@ async def test_all_audio_ready_and_layouts_enqueues_timeline():
     mock_job = MagicMock()
     mock_db.get = AsyncMock(return_value=mock_job)
 
-    with patch("app.pipeline.barrier.run_timeline") as mock_run_timeline:
+    with patch("app.pipeline.tasks.run_timeline") as mock_run_timeline:
         mock_run_timeline.delay = MagicMock()
         from app.pipeline.barrier import check_barrier
         await check_barrier(job_id, mock_db)
@@ -51,7 +51,7 @@ async def test_error_slide_does_not_enqueue():
     mock_execute_result.scalars.return_value.all.return_value = slides
     mock_db.execute = AsyncMock(return_value=mock_execute_result)
 
-    with patch("app.pipeline.barrier.run_timeline") as mock_run_timeline:
+    with patch("app.pipeline.tasks.run_timeline") as mock_run_timeline:
         mock_run_timeline.delay = MagicMock()
         from app.pipeline.barrier import check_barrier
         await check_barrier(job_id, mock_db)
@@ -73,7 +73,7 @@ async def test_audio_ready_but_missing_layout_does_not_enqueue():
     mock_execute_result.scalars.return_value.all.return_value = slides
     mock_db.execute = AsyncMock(return_value=mock_execute_result)
 
-    with patch("app.pipeline.barrier.run_timeline") as mock_run_timeline:
+    with patch("app.pipeline.tasks.run_timeline") as mock_run_timeline:
         mock_run_timeline.delay = MagicMock()
         from app.pipeline.barrier import check_barrier
         await check_barrier(job_id, mock_db)

@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from app.api.routes import router
-from app.db import async_engine, AsyncSessionLocal
+from app.db import get_engine, AsyncSessionLocal
 from app.llm.prompts import PROMPT_SEEDS
 from app.models import Base, PromptTemplate
 
@@ -12,7 +12,7 @@ from app.models import Base, PromptTemplate
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Create all tables (dev convenience; use alembic for prod migrations)
-    async with async_engine.begin() as conn:
+    async with get_engine().begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
     # Seed PromptTemplate rows
@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI):
     yield
 
     # Shutdown: dispose engine
-    await async_engine.dispose()
+    await get_engine().dispose()
 
 
 app = FastAPI(title="Pipeline A", version="0.1.0", lifespan=lifespan)

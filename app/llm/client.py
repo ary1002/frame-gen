@@ -1,16 +1,35 @@
 import anthropic
+import httpx
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+
 from app.config import get_settings
 
 _client: anthropic.AsyncAnthropic | None = None
 
 
+def reset_client() -> None:
+    """Call this in Celery worker init to avoid inheriting parent's connection pool."""
+    global _client
+    _client = None
+
+
 def get_client() -> anthropic.AsyncAnthropic:
     global _client
     if _client is None:
-        _client = anthropic.AsyncAnthropic(api_key=get_settings().ANTHROPIC_API_KEY)
+        _client = anthropic.AsyncAnthropic(
+            api_key=get_settings().ANTHROPIC_API_KEY,
+            timeout=httpx.Timeout(connect=30.0, read=600.0, write=30.0, pool=30.0),
+            max_retries=0,  # we handle retries via tenacity below
+        )
     return _client
 
 
+@retry(
+    retry=retry_if_exception_type((anthropic.APITimeoutError, anthropic.APIConnectionError)),
+    wait=wait_exponential(multiplier=1, min=2, max=30),
+    stop=stop_after_attempt(4),
+    reraise=True,
+)
 async def call_with_tool(
     system: str,
     user: str,

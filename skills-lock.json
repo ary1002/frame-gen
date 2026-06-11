@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "remotion-video-creation": {
+      "source": "affaan-m/ECC",
+      "sourceType": "github",
+      "skillPath": "skills/remotion-video-creation/SKILL.md",
+      "computedHash": "affb2c3567929efb66a9236335a5e52f856a68d0982e64cee614e885bb70d692"
+    }
+  }
+}

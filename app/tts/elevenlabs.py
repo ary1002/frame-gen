@@ -5,16 +5,22 @@ import tempfile
 import os
 from typing import AsyncIterator
 import httpx
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from tenacity import retry, stop_after_attempt, wait_exponential, wait_random, wait_combine, retry_if_exception
 
 from app.config import get_settings
 from app.contracts import AudioBlob, WordTimestamp
 from app import storage
 
-_SEMAPHORE = asyncio.Semaphore(5)
 
 class TTSError(Exception):
     pass
+
+
+def _is_retryable(exc: BaseException) -> bool:
+    """Retry on network errors and rate-limit / concurrent-request responses."""
+    if isinstance(exc, httpx.HTTPStatusError):
+        return exc.response.status_code in (409, 429, 500, 502, 503, 504)
+    return isinstance(exc, (httpx.TransportError, httpx.TimeoutException))
 
 def collapse_to_words(
     characters: list[str],
@@ -46,9 +52,9 @@ def collapse_to_words(
     return words
 
 @retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=2, max=30),
-    retry=retry_if_exception_type(httpx.HTTPError),
+    stop=stop_after_attempt(8),
+    wait=wait_combine(wait_exponential(multiplier=2, min=4, max=60), wait_random(0, 3)),
+    retry=retry_if_exception(_is_retryable),
     reraise=True,
 )
 async def _call_elevenlabs(voice_id: str, text: str, api_key: str) -> dict:
@@ -86,11 +92,10 @@ async def synthesize_slide(
     job_id: str,
 ) -> tuple[AudioBlob, list[WordTimestamp]]:
     s = get_settings()
-    async with _SEMAPHORE:
-        try:
-            result = await _call_elevenlabs(voice_id, text, s.ELEVENLABS_API_KEY)
-        except httpx.HTTPError as e:
-            raise TTSError(f"ElevenLabs API error: {e}") from e
+    try:
+        result = await _call_elevenlabs(voice_id, text, s.ELEVENLABS_API_KEY)
+    except (httpx.HTTPError, httpx.HTTPStatusError) as e:
+        raise TTSError(f"ElevenLabs API error: {e}") from e
 
     audio_bytes = base64.b64decode(result["audio_base64"])
     alignment = result.get("alignment", {})

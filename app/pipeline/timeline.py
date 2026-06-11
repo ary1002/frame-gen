@@ -15,6 +15,9 @@ from app.models import Job, Slide
 
 FPS = 30
 TRANSITION_OVERLAP_FRAMES = 20
+# Silent padding added before each slide's audio. Must match BREATH_FRAMES in
+# remotion/src/PipelineAComposition.tsx.
+BREATH_FRAMES = 9
 
 
 def assemble_timeline(slides_data: list[dict]) -> RemotionSchema:
@@ -32,7 +35,7 @@ def assemble_timeline(slides_data: list[dict]) -> RemotionSchema:
     all_word_timestamps: list[WordTimestamp] = []
 
     for i, s in enumerate(slides_data):
-        duration_frames = round(s["actual_duration_s"] * FPS)
+        duration_frames = round(s["actual_duration_s"] * FPS) + BREATH_FRAMES
         start_frame = cumulative_frames - (TRANSITION_OVERLAP_FRAMES * i)
 
         layout_dict = dict(s["layout_json"])
@@ -50,12 +53,13 @@ def assemble_timeline(slides_data: list[dict]) -> RemotionSchema:
         cumulative_frames += duration_frames
 
         slide_start_s = start_frame / FPS
+        breath_s = BREATH_FRAMES / FPS
         for wt in s.get("word_timestamps") or []:
             all_word_timestamps.append(
                 WordTimestamp(
                     word=wt["word"],
-                    start_s=wt["start_s"] + slide_start_s,
-                    end_s=wt["end_s"] + slide_start_s,
+                    start_s=wt["start_s"] + slide_start_s + breath_s,
+                    end_s=wt["end_s"] + slide_start_s + breath_s,
                 )
             )
 

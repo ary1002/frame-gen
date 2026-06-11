@@ -13,14 +13,23 @@ export const CaptionsLayer: React.FC<Props> = ({ captions }) => {
     (wt) => currentTime >= wt.start_s && currentTime < wt.end_s
   );
 
-  // Show a window of ~7 words centered on active
+  // When between words, find the last word that has started so the window
+  // doesn't jump back to index 0 during inter-word gaps.
+  const anchorIndex = activeIndex >= 0
+    ? activeIndex
+    : captions.word_timestamps.reduce(
+        (last, wt, i) => (currentTime >= wt.start_s ? i : last),
+        -1
+      );
+
+  // Show a window of ~7 words centered on anchor
   const windowSize = 7;
   const half = Math.floor(windowSize / 2);
-  const start = Math.max(0, activeIndex - half);
+  const start = Math.max(0, anchorIndex - half);
   const end = Math.min(captions.word_timestamps.length, start + windowSize);
   const windowWords = captions.word_timestamps.slice(start, end);
 
-  if (windowWords.length === 0) return null;
+  if (anchorIndex < 0 || windowWords.length === 0) return null;
 
   return (
     <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "center", pointerEvents: "none" }}>
@@ -37,7 +46,7 @@ export const CaptionsLayer: React.FC<Props> = ({ captions }) => {
       }}>
         {windowWords.map((wt, i) => {
           const globalIndex = start + i;
-          const isActive = globalIndex === activeIndex;
+          const isActive = globalIndex === activeIndex && activeIndex >= 0;
           return (
             <span key={globalIndex} style={{
               fontSize: 52,

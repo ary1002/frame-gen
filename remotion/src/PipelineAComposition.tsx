@@ -1,10 +1,14 @@
 import React from "react";
-import { Audio, AbsoluteFill } from "remotion";
+import { Audio, AbsoluteFill, Sequence } from "remotion";
 import { TransitionSeries, linearTiming } from "@remotion/transitions";
 import { RemotionSchema } from "./types";
 import { SlideWithEffect } from "./SlideWithEffect";
 import { CaptionsLayer } from "./CaptionsLayer";
 import { resolveTransition } from "./transitions";
+
+// 9 frames (~0.3 s) of silence before each slide's audio begins.
+// Must match BREATH_FRAMES in app/pipeline/timeline.py.
+const BREATH_FRAMES = 9;
 
 interface Props { schema: RemotionSchema; }
 
@@ -17,7 +21,11 @@ export const PipelineAComposition: React.FC<Props> = ({ schema }) => {
             <TransitionSeries.Sequence durationInFrames={slide.duration_frames}>
               <AbsoluteFill>
                 <SlideWithEffect data={slide} />
-                {slide.audio_url && <Audio src={slide.audio_url} />}
+                {slide.audio_url && (
+                  <Sequence from={BREATH_FRAMES}>
+                    <Audio src={slide.audio_url} />
+                  </Sequence>
+                )}
               </AbsoluteFill>
             </TransitionSeries.Sequence>
             {i < schema.slides.length - 1 && (
