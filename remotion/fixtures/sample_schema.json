@@ -1,0 +1,74 @@
+{
+  "slides": [
+    {
+      "slide_index": 0,
+      "start_frame": 0,
+      "duration_frames": 150,
+      "audio_url": "",
+      "layout": {
+        "slide_index": 0,
+        "template": "title_card",
+        "props": {
+          "title": "The Future of AI",
+          "eyebrow": "Episode 1",
+          "background_color": "#1a1a2e"
+        },
+        "effect": { "type": "zoom", "from": 1.0, "to": 1.05, "easing": "easeInOut" },
+        "transition_out": { "type": "fade", "duration_frames": 20 },
+        "duration_frames": 150
+      }
+    },
+    {
+      "slide_index": 1,
+      "start_frame": 130,
+      "duration_frames": 180,
+      "audio_url": "",
+      "layout": {
+        "slide_index": 1,
+        "template": "bullet_list",
+        "props": {
+          "title": "Key Developments",
+          "points": ["Large language models", "Multimodal capabilities", "Autonomous agents"],
+          "background_color": "#16213e"
+        },
+        "effect": { "type": "blur", "from": 0, "to": 0, "easing": "linear" },
+        "transition_out": { "type": "wipe", "direction": "from-left", "duration_frames": 20 },
+        "duration_frames": 180
+      }
+    },
+    {
+      "slide_index": 2,
+      "start_frame": 290,
+      "duration_frames": 150,
+      "audio_url": "",
+      "layout": {
+        "slide_index": 2,
+        "template": "comparison_two_col",
+        "props": {
+          "title": "Then vs Now",
+          "columns": [
+            { "heading": "2020", "points": ["Rule-based systems", "Narrow AI", "Expert systems"] },
+            { "heading": "2025", "points": ["Foundation models", "General reasoning", "Agentic pipelines"] }
+          ],
+          "background_color": "#0f3460"
+        },
+        "effect": { "type": "spotlight", "from": 0.6, "to": 1.0, "easing": "easeIn" },
+        "transition_out": { "type": "circle_wipe", "duration_frames": 20 },
+        "duration_frames": 150
+      }
+    }
+  ],
+  "captions": {
+    "style": "default",
+    "color_active": "#FFFF00",
+    "word_timestamps": [
+      { "word": "The", "start_s": 0.0, "end_s": 0.3 },
+      { "word": "Future", "start_s": 0.3, "end_s": 0.7 },
+      { "word": "of", "start_s": 0.7, "end_s": 0.9 },
+      { "word": "AI", "start_s": 0.9, "end_s": 1.4 }
+    ]
+  },
+  "total_frames": 440,
+  "fps": 30,
+  "serve_url": "local"
+}
