@@ -25,21 +25,19 @@ async function main() {
   });
 
   process.stdout.write(JSON.stringify({ status: "selecting_composition" }) + "\n");
+  const browserExecutable = process.env.BROWSER_EXECUTABLE || "/usr/bin/google-chrome";
+  // "chrome-for-testing" tells Remotion to pass --headless=new instead of
+  // the removed --headless=old flag (Chrome 112+ / Chrome 141 dropped the old mode).
+  const chromeMode = "chrome-for-testing";
+  const chromiumOptions = { headless: true };
+
   const composition = await selectComposition({
     serveUrl: bundleLocation,
     id: "PipelineAComposition",
     inputProps: { schema },
-    // Remotion may download a headless Chromium binary when rendering on
-    // machines without it. Provide a callback so we can surface download
-    // progress as JSON lines (the Python pipeline expects JSON progress).
-    onBrowserDownload: (info) => {
-      try {
-        process.stdout.write(JSON.stringify({ browser_download: info }) + "\n");
-      } catch (e) {
-        // Fallback: stringify unknown values
-        process.stdout.write(JSON.stringify({ browser_download: String(info) }) + "\n");
-      }
-    },
+    browserExecutable,
+    chromiumOptions,
+    chromeMode,
   });
 
   process.stdout.write(JSON.stringify({ status: "rendering", total_frames: composition.durationInFrames }) + "\n");
@@ -49,6 +47,9 @@ async function main() {
     codec: "h264",
     outputLocation: resolve(outputPath),
     inputProps: { schema },
+    browserExecutable,
+    chromiumOptions,
+    chromeMode,
     onProgress: ({ progress }) => {
       process.stdout.write(JSON.stringify({ progress: Math.round(progress * 100) }) + "\n");
     },

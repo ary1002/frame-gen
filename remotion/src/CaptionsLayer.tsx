@@ -54,7 +54,7 @@ export const CaptionsLayer: React.FC<Props> = ({ captions }) => {
             fps,
             config: { damping: 12, stiffness: 200 },
           });
-          const scale = isActive ? interpolate(popProgress, [0, 1], [1, 1.15]) : 1;
+          const scale = isActive ? interpolate(popProgress, [0, 1], [1, 1.03]) : 1;
 
           return (
             <span key={globalIndex} style={{
