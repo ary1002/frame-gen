@@ -116,9 +116,53 @@ def run_timeline(self, job_id: str):
 
 @celery_app.task(bind=True, name="run_render")
 def run_render(self, job_id: str):
-    pass  # Stage 6 — implemented later
+    """Stage 6: render video via Node subprocess."""
+    asyncio.run(_run_render_async(job_id))
+
+
+async def _run_render_async(job_id: str):
+    import uuid
+
+    from app.db import AsyncSessionLocal
+    from app.models import Job
+    from app.pipeline.render import run_render_job
+
+    async with AsyncSessionLocal() as db:
+        schema_key = f"{job_id}/remotion_schema.json"
+        video_url = await run_render_job(job_id, schema_key, db)
+
+        job = await db.get(Job, uuid.UUID(job_id))
+        job.video_url = video_url
+        job.render_progress = 1.0
+        job.status = "COMPLETE"
+        await db.commit()
 
 
 @celery_app.task(bind=True, name="run_article_gen")
 def run_article_gen(self, job_id: str):
-    pass  # Stage 6 parallel — implemented later
+    """Stage 6 (parallel): generate markdown article from slide scripts."""
+    asyncio.run(_run_article_gen_async(job_id))
+
+
+async def _run_article_gen_async(job_id: str):
+    import uuid
+
+    from app.db import AsyncSessionLocal
+    from app.models import Job, Slide
+    from app.llm.article_gen import generate_article
+    from app import storage
+
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(
+            sqlalchemy.select(Slide)
+            .where(Slide.job_id == uuid.UUID(job_id))
+            .order_by(Slide.slide_index)
+        )
+        slides = result.scalars().all()
+        slide_texts = [s.text for s in slides if s.text]
+
+        article_key = await generate_article(job_id, slide_texts)
+
+        job = await db.get(Job, uuid.UUID(job_id))
+        job.article_url = storage.get_presigned_url(article_key, expires=86400)
+        await db.commit()
