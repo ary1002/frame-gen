@@ -40,6 +40,13 @@ node render.mjs <schema_json_path> <output_mp4_path> [upload_url]
 npm run typecheck
 ```
 
+### Frontend
+```bash
+cd frontend && npm install
+npm run dev      # Vite dev server
+npm run build    # Production build to frontend/dist/
+```
+
 ### Infrastructure
 ```bash
 # Start Postgres, Redis, MinIO
@@ -84,6 +91,10 @@ All timing is at 30 fps. `duration_frames = round(actual_duration_s × 30)` — 
 ### Storage
 
 `app/storage.py` wraps boto3 for both local MinIO and production S3. JSON blobs (scripts, layouts, schemas) go to MinIO; presigned URLs are returned to clients.
+
+### Frontend
+
+React + Vite SPA in `frontend/`. Talks to the FastAPI backend via `frontend/src/api.js`. `useJobPoller.js` polls job status; components live in `frontend/src/components/`.
 
 ### Configuration
 
