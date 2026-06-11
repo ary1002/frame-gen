@@ -56,6 +56,8 @@ class SlideEntry(BaseModel):
     duration_frames: int
     audio_url: str
     layout: SlideLayout
+    word_timestamps: list[WordTimestamp] = []
+    cues: list[float] = []
 
 
 class CaptionConfig(BaseModel):

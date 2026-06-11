@@ -1,6 +1,6 @@
 import React from "react";
-import { useCurrentFrame, useVideoConfig, AbsoluteFill } from "remotion";
-import { CaptionConfig, WordTimestamp } from "./types";
+import { useCurrentFrame, useVideoConfig, AbsoluteFill, spring, interpolate } from "remotion";
+import { CaptionConfig } from "./types";
 
 interface Props { captions: CaptionConfig; }
 
@@ -22,7 +22,6 @@ export const CaptionsLayer: React.FC<Props> = ({ captions }) => {
         -1
       );
 
-  // Show a window of ~7 words centered on anchor
   const windowSize = 7;
   const half = Math.floor(windowSize / 2);
   const start = Math.max(0, anchorIndex - half);
@@ -47,13 +46,25 @@ export const CaptionsLayer: React.FC<Props> = ({ captions }) => {
         {windowWords.map((wt, i) => {
           const globalIndex = start + i;
           const isActive = globalIndex === activeIndex && activeIndex >= 0;
+
+          // Find the frame when this word became active to drive spring pop
+          const wordStartFrame = Math.round(wt.start_s * fps);
+          const popProgress = spring({
+            frame: frame - wordStartFrame,
+            fps,
+            config: { damping: 12, stiffness: 200 },
+          });
+          const scale = isActive ? interpolate(popProgress, [0, 1], [1, 1.15]) : 1;
+
           return (
             <span key={globalIndex} style={{
               fontSize: 52,
               fontFamily: "sans-serif",
               fontWeight: isActive ? "bold" : "normal",
               color: isActive ? captions.color_active : "#ffffff",
-              transition: "color 0.1s",
+              display: "inline-block",
+              transform: `scale(${scale})`,
+              transformOrigin: "center bottom",
             }}>
               {wt.word}
             </span>
